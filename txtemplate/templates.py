@@ -253,14 +253,18 @@ class Jinja2TemplateLoader(object):
     interface.implements(itemplate.ITemplateLoader)
 
     def __init__(self, path, **options):
-        self.path = path
+        if not path:
+            self.path = os.curdir
+        elif isinstance(path, list):
+            self.path = [os.path.join(os.path.abspath(p)) for p in path]
+        else:
+            self.path = os.path.join(os.path.abspath(path))
+
         self.options = {"auto_reload": False}
         self.options.update(options)
-        if not self.path:
-            self.path = os.curdir
 
         self.loader = jinja2.FileSystemLoader(
-            os.path.join(os.path.abspath(self.path)),
+            self.path,
             encoding="utf-8"
         )
         self.environment = jinja2.Environment(loader=self.loader, **self.options)
